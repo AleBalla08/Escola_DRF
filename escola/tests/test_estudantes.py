@@ -8,24 +8,13 @@ from escola.models import Estudante
 from escola.serializers import EstudanteSerializer
 
 class EstudanteTestCase(APITestCase):
+    fixtures = ['prototipo_banco.json']
     def setUp(self):
-        self.usuario = User.objects.create_superuser(username='admin', password='admin')
+        self.usuario = User.objects.get(username='ale')
         self.url = reverse('Estudantes-list')
         self.client.force_authenticate(user=self.usuario)
-        self.cliente_01 = Estudante.objects.create(
-            nome = 'Estudante Um',
-            email = 'estudante01@gmail.com',
-            cpf = '29207126087',
-            data_nascimento = '2024-01-02',
-            celular = '54 99123-6789'
-        )
-        self.cliente_02 = Estudante.objects.create(
-            nome = 'Estudante Dois',
-            email = 'estudante02@gmail.com',
-            cpf = '51703986032',
-            data_nascimento = '2024-01-02',
-            celular = '54 99123-6759'
-        )
+        self.cliente_01 = Estudante.objects.get(pk=1)
+        self.cliente_02 = Estudante.objects.get(pk=2)
 
     def test_requisicao_get_estudantes(self):
         response = self.client.get(self.url)#/estudantes/
@@ -36,6 +25,7 @@ class EstudanteTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         dados_estudante = Estudante.objects.get(pk=1)
         dados_estudante_serialized = EstudanteSerializer(instance=dados_estudante).data
+        print('dados estudante: ',dados_estudante_serialized)
         self.assertEqual(response.data, dados_estudante_serialized)
     
     def test_requisicao_criar_um_estudante(self):
@@ -52,3 +42,14 @@ class EstudanteTestCase(APITestCase):
     def test_requisicao_delete_um_estudante(self):
         response = self.client.delete(f'{self.url}2/')#/estudante/2/
         self.assertEqual(response.status_code, status.HTTP_204_NO_CONTENT)
+
+    def test_requisicao_put_editar_um_estudante(self):
+        dados={
+            'nome':'testePut',
+            'email':'testePut@gmail.com',
+            'cpf':'80239700031',
+            'data_nascimento':'1990-03-03',
+            'celular':'54 22345-1224'
+        }
+        response = self.client.put(self.url + '1/', data=dados)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
